@@ -55,8 +55,8 @@ x = pd.DataFrame(titles, columns = ['title']).join(pd.DataFrame(doc_links, colum
 final = x.join(pd.DataFrame(texts, columns = ['text']))
 
 
-# engine = create_engine('postgresql://cl65610:**********@lincolnlp.cdxjo0ppmsos.us-east-1.rds.amazonaws.com:5432/lincolnlp')
-final.to_sql('lincoln_said', engine)
+# engine = create_engine('postgresql://*******:**********@lincolnlp.cdxjo0ppmsos.us-east-1.rds.amazonaws.com:5432/lincolnlp')
+# final.to_sql('lincoln_said', engine)
 
 
 

@@ -5,6 +5,8 @@ from spacy.attrs import ORTH
 import matplotlib.pyplot as plt
 from datetime import datetime
 import matplotlib.dates as dates
+from textblob import TextBlob
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 %matplotlib inline
 
 df = pd.read_csv('/Users/codylaminack/Documents/Practice/lincoln/data/all_lincoln.csv')
@@ -117,7 +119,7 @@ ordered.reset_index(drop=True, inplace=True)
 ordered['year']  = pd.to_numeric(ordered.year)
 plt.scatter(ordered.year, ordered.word_count)
 
-by_year = ordered.groupby('year')
+by_year = test.groupby('year')
 plt.style.use('fivethirtyeight')
 by_year.word_count.mean().plot(kind='line')
 by_year.word_count.count().plot(kind='line')
@@ -130,18 +132,9 @@ plt.show()
 
 def string_date(date):
     return dates.DateFormatter.strftime_pre_1900(date, "%d-%m-%Y")
-
+# Not sure how to figure out this piece, but it'll be important to to plotting a lot of the results
 oldies = dates.DateFormatter
-oldies.strftime_pre_1900
-
-
-test['word_count'] = test['parsed'].apply(text_length)
-
-test.head()
-
-for row in range(0, len(test.index)):
-    test.iloc[row]['length'] = len(test.iloc[row]['text'])
-test.tail()
+date.oldies.strftime_pre_1900()
 
 # Playing around in Spacy
 nlp(unicode(df.iloc[4].text))
@@ -175,13 +168,11 @@ for i in test.parsed.iloc[0:100]:
             print token.orth_, token.pos_
 
 # https://github.com/cl65610/DSI-DC-2/blob/master/week-04/5.1-natural-language-processing/code/yelp_review_text_lab-solution.ipynb nlp lab with some useful code
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 sid = SentimentIntensityAnalyzer()
 k = sid.polarity_scores(test.ix[1].text)
 k
 
-from textblob import textblob
 for i in range(2000,2100):
     print test.ix[i].title
     x = TextBlob(test.ix[i].text.decode('utf-8')).sentiment
@@ -198,15 +189,39 @@ for i in range(2000,2100):
 # test['polarity'], test['subjectivity'], test['negativity'], test['neutrality'], test['positivity'], test['compound'] = test.text.apply(get_sentiment)
 
 def polarity(doc):
-    return TextBlob(doc.decode('utf-8')).sentiment.polarity
+    sent = TextBlob(doc.decode('utf-8')).sentiment
+    return sent.polarity
+
+def subjectivity(doc):
+    sent = TextBlob(doc.decode('utf-8')).sentiment
+    return sent.subjectivity
 
 def negativity(doc):
     return sid.polarity_scores(doc.decode('utf-8'))['neg']
 
 negativity(test.ix[1].text)
 
-test['polarity'] = test.text.apply(polarity)
-test['negativity'] = test.text.apply(negativity)
+test['polarity']= test.text.apply(polarity)
+test['subjectivity'] = test.text.apply(subjectivity)
+# This NLTK code is painfully slow. Need to find a faster way
+# test['negativity'] = test.text.apply(negativity)
 
-test.head()
-test[test.polarity <= -0.5].ix[3269].text
+# Looking into some of the texts at either end of the polarity spectrum
+test.ix[2418].text
+test[test.polarity >=0.8]
+test[test.polarity <= -0.5]
+
+# Gettysburg Address stuff
+sid.polarity_scores(test.ix[4639].text.decode('utf-8'))
+test[(test.title.str.contains('Mary Lincoln')) | (test.title.str.contains('Mary Todd'))]
+
+test[test.text.str.contains('house divided')]
+import seaborn as sns
+sns.distplot(test.polarity)
+sns.distplot(test.subjectivity)
+
+by_year.polarity.mean().plot(kind='line')
+by_year.subjectivity.mean().plot(kind='line')
+plt.legend()
+plt.savefig('/Users/codylaminack/Documents/Practice/lincoln/visualization/subjectivity_polarity_over_time.png', bbox_inches='tight', pad_inches=0.75, Transparent=True)
+plt.show()

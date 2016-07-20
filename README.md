@@ -1,7 +1,7 @@
 # LincolNLP
 Natural Language Processing on our 16th President
 
-Abraham Lincoln is arguably one of the most quoted authors in American History, and yet there has yet to be comprehensive NLP analysis performed on his writing. This project seeks to fill this gap. By getting a deeper understanding of Lincoln's writing, we can not only gain greater insights into some of his most famous works (How does his tone and subjectivity change throughout the Gettysburg Address?), but we can use patterns in his writing to gain greater insight into historical events and see how his writing changed in response to those events. 
+Abraham Lincoln is arguably one of the most quoted authors in American History, and yet there has yet to be comprehensive NLP analysis performed on his writing. This project seeks to fill this gap. By getting a deeper understanding of Lincoln's writing, we can not only gain greater insights into some of his most famous works (How does his tone and subjectivity change throughout the Gettysburg Address?), but we can use patterns in his writing to gain greater insight into historical events and see how his writing changed in response to those events (What battles had the most outsized impact on his overall sentiment?). 
 
 The data for this project was mined from the University of Michigan. After building a script that could successfully retrieve all 6700 documents from Lincoln's Collected Writings, I created an EC2 instance in AWS and let the program run in that instance overnight. Once the data was pulled into that virtual machine, it was sent to an Amazon RDS PostgreSQL database where it is currently being housed. 
 

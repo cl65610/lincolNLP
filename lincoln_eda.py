@@ -3,6 +3,7 @@ from spacy.en import English
 import spacy
 from spacy.attrs import ORTH
 import matplotlib.pyplot as plt
+import seaborn as sns
 from datetime import datetime
 import matplotlib.dates as dates
 from textblob import TextBlob
@@ -23,11 +24,7 @@ df['month'] = df.text.str.extract(r'(January|Jan|JANUARY|JAN|February|Feb|FEBRUA
 # Regex that tries to pull the ull date out of the text
 df['full_date'] = df.text.str.extract(r'([aA-zZ]+\b[\W]+\d+[\W+|\s]+18[\d]{2})')
 
-# Fill in some of the values that were null with the first date of the month
-df.full_date.fillna(df.month+' 1, '+df.year, inplace=True)
-for i in df[df.date.isnull()==True].index:
-    date_creation = '%r 1, %r'%(df.iloc[i].month, df.iloc[i].year)
-    df.ix[i, 'full_date'] = date_creation
+
 
 #Pull out the brackets, and other odd characters from full date
 df.full_date = df.full_date.str.replace('[', '')
@@ -63,14 +60,11 @@ df.dropna(subset=['year'], inplace=True)
 df.dropna(subset=['month'], inplace=True)
 df.isnull().sum()
 
-
-
+#Reset the index for the loop we're about to do.
+df.reset_index(inplace=True)
 
 # Load the relevant parser
 nlp = spacy.load('en')
-
-
-df.reset_index(inplace=True)
 
 # This format works well for keeping the individual text objects toghether after parsing. Each one
 # is stored as a list.
@@ -88,6 +82,10 @@ parse_df = pd.DataFrame(parsed, columns = ['parsed'])
 test = df.join(parse_df)
 test.drop('index', axis=1, inplace=True)
 
+# Clean up some dtypes
+
+test['year'] = pd.to_numeric(test['year'])
+
 for token in parse_df.iloc[1].parsed:
     if token.pos_ != 'PUNCT':
         print token.orth_, token.pos_,'\n', token.lemma_
@@ -99,7 +97,7 @@ for text in parse_df.iloc[0:100].parsed:
             print token, token.lemma_
 
 
-test.tail(19)
+test.tail(20)
 
 # add a column that has the length of each item
 def text_length(doc):
@@ -128,23 +126,30 @@ plt.title('Abe Lincoln: Prolificacy vs. Brevity')
 plt.savefig('/Users/codylaminack/Documents/Practice/lincoln/visualization/Count_vs_length_by_year.png', bbox_inches='tight', pad_inches=0.75, Transparent=True)
 plt.show()
 
-
-
+test_date = test.ix[1].date
+import datetime
 def string_date(date):
     return dates.DateFormatter.strftime_pre_1900(date, "%d-%m-%Y")
-# Not sure how to figure out this piece, but it'll be important to to plotting a lot of the results
-oldies = dates.DateFormatter
-date.oldies.strftime_pre_1900()
+# Not sure how to figure out this piece, but it'll be important to to plotting a lot of the results. Still can't figure out this microsecond answer.
+# In the interest of time, I'm going to program in something that will allow me to plot time more granularly than by year.
+# It's hard to say for sure, but it seems like the problem has something to do with the way the strftime function is taking in the date and converting it into a string
 
-# Playing around in Spacy
-nlp(unicode(df.iloc[4].text))
-print df.iloc[4].text
+# oldies = dates.DateFormatter
+# test_date = test.ix[1].date + datetime.timedelta(milliseconds=500)
+# test_date
+#
+# dates.DateFormatter.strftime_pre_1900(oldies(test.ix[i].date+datetime.timedelta(milliseconds=500)), '%d/%m/%Y %f')
+# oldies('1899-01-01')
 
-parser = English()
-example = u"There's a dog up there."
-parsed = parser(unicode(df.text[1]))
 
+# Hard coding in the months. Should be pretty simple: this column will represent what month in the century an event took place.
+month = lambda x: x.month
+test['month_numeric'] = test.date.apply(month)
+test['months_into_century'] = ((test['year']-1800)*12)+(test['month_numeric'])
 
+test[test.months_into_century >= 720]
+
+# Playing around in Spacy. Referencing above-created list, "parsed"
 
 for i in parsed:
     print i.orth_, i.pos_, i.lemma_
@@ -203,6 +208,20 @@ negativity(test.ix[1].text)
 
 test['polarity']= test.text.apply(polarity)
 test['subjectivity'] = test.text.apply(subjectivity)
+
+presidency_months = test[test.months_into_century >= 720].groupby('months_into_century')
+labels = ['Jan 1860', 'Aug 1860', 'Jan 1861', 'Aug 1861', 'Jan 1862', 'Aug 1862',
+        ' Jan 1863', 'Aug 1863', 'Jan 1864', 'Aug 1864', 'Jan 1865', 'Aug 1865']
+tickrange = range(720, 800, 6)
+plt.style.use('seaborn-poster')
+presidency_months.polarity.mean().plot(kind='line', linewidth=1.75, color='teal')
+plt.xticks(tickrange, labels, rotation = 65)
+plt.xlabel('Lincoln\'s Presidency')
+plt.ylabel('Average Monthly Sentiment')
+plt.title('Clear and Present Feelings')
+# plt.savefig('/Users/codylaminack/Documents/Practice/lincoln/visualization/pres_feelings.png', bbox_inches='tight', pad_inches=0.75, Transparent=True)
+plt.show()
+
 # This NLTK code is painfully slow. Need to find a faster way
 # test['negativity'] = test.text.apply(negativity)
 
@@ -211,13 +230,15 @@ test.ix[2418].text
 test[test.polarity >=0.8]
 test[test.polarity <= -0.5]
 
-# Gettysburg Address stuff
+#Looking into some specific points in time
 sid.polarity_scores(test.ix[4639].text.decode('utf-8'))
 test[(test.title.str.contains('Mary Lincoln')) | (test.title.str.contains('Mary Todd'))]
 
-test[test.text.str.contains('house divided')]
-import seaborn as sns
-sns.distplot(test.polarity)
+test[test.text.str.contains('Antietam')]
+
+sns.distplot(test[test.months_into_century >720].polarity, color='teal')
+sns.distplot(test[test.months_into_century<=720].polarity, color='brown')
+plt.show()
 sns.distplot(test.subjectivity)
 
 by_year.polarity.mean().plot(kind='line')

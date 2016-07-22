@@ -246,3 +246,9 @@ by_year.subjectivity.mean().plot(kind='line')
 plt.legend()
 plt.savefig('/Users/codylaminack/Documents/Practice/lincoln/visualization/subjectivity_polarity_over_time.png', bbox_inches='tight', pad_inches=0.75, Transparent=True)
 plt.show()
+
+for sent in test.ix[3000].parsed.sents:
+    print sent
+
+#  PUsh this cleaned csv so that we can begin some topic modeling on it
+test.to_csv('/Users/codylaminack/Documents/Practice/lincoln/data/parsed_lincoln.csv')

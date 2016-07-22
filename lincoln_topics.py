@@ -69,7 +69,7 @@ def tokenizeText(sample):
     #
     # # stoplist symbols
     # tokens = [tok for tok in tokens if tok not in SYMBOLS]
-    good_pos = ['VERB', 'ADJ', 'ADV', 'NOUN']
+    good_pos = ['VERB', 'ADJ', 'ADV']
     # Remove entities
     tokens = [tok.lemma_.lower() for tok in tokens if tok.pos_ in good_pos]
     for tok in tokens:
@@ -88,7 +88,7 @@ def tokenizeText(sample):
         tokens.remove("``")
 
     return lemmas
-tokenizeText(df.ix[1].text)
+
 
 df = pd.read_csv('/Users/codylaminack/Documents/Practice/lincoln/data/parsed_lincoln.csv')
 df['clean_text'] = df['text'].apply(clean_text)
